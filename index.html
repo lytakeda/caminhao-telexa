@@ -406,13 +406,26 @@ function mostrarTranscricao(txt){
 }
 
 async function interpretarComIA(txt){
+  const hoje = new Date();
+  const anoAtual = hoje.getFullYear();
+  const mesAtual = String(hoje.getMonth()+1).padStart(2,'0');
+  const diaAtual = String(hoje.getDate()).padStart(2,'0');
+  const dataHoje = `${diaAtual}/${mesAtual}/${anoAtual}`;
+
   const prompt=`Interprete este lancamento financeiro de uma empresa de transporte de caminhao e retorne SOMENTE um JSON valido, sem markdown, sem explicacao:
-{"descricao":"texto curto","valor":0.00,"tipo":"receita ou despesa ou extra","confianca":"alta ou media ou baixa"}
+{"descricao":"texto curto","valor":0.00,"tipo":"receita ou despesa ou extra","data":"DD/MM/AAAA","confianca":"alta ou media ou baixa"}
 
 Regras de tipo:
 - receita: recebeu dinheiro, pagamento cooperativa, saldo, credito
 - despesa: combustivel, pneu, borracha, manutencao, retencoes, impostos, kit, bateria, saude
 - extra: gastos pequenos do bolso, servicos avulsos nao listados no recibo
+
+Regras de data:
+- Se o usuario mencionar uma data especifica (ex: "dia 12 de maio", "no dia 3", "em 15/04"), use essa data no formato DD/MM/AAAA
+- Se mencionar "hoje", use a data de hoje: ${dataHoje}
+- Se mencionar "ontem", calcule o dia anterior a hoje
+- Se nao mencionar data alguma, use a data de hoje: ${dataHoje}
+- Sempre use o ano ${anoAtual} se nao for mencionado
 
 Texto: "${txt}"`;
   try{
@@ -432,11 +445,19 @@ Texto: "${txt}"`;
 function interpretarLocal(txt){
   const t=txt.toLowerCase();
   let valor=0,tipo='despesa',desc=txt;
+  const hoje2=new Date();
+  let data=String(hoje2.getDate()).padStart(2,'0')+'/'+String(hoje2.getMonth()+1).padStart(2,'0')+'/'+hoje2.getFullYear();
   const nums=t.match(/\d+[.,]?\d*/g);
   if(nums){for(const n of nums){const v=parseFloat(n.replace(',','.'));if(v>1){valor=v;break;}}}
   if(t.includes('recebi')||t.includes('pagamento')||t.includes('cooperativa')||t.includes('saldo'))tipo='receita';
   else if(t.includes('gastei')||t.includes('paguei')||t.includes('comprei'))tipo='extra';
-  mostrarConfirmacao(txt,{descricao:desc,valor,tipo,confianca:'media'});
+  // tenta extrair dia simples como "dia 12"
+  const diaMatch=t.match(/dia\s+(\d{1,2})/);
+  if(diaMatch){
+    const dia=String(diaMatch[1]).padStart(2,'0');
+    data=dia+'/'+String(hoje2.getMonth()+1).padStart(2,'0')+'/'+hoje2.getFullYear();
+  }
+  mostrarConfirmacao(txt,{descricao:desc,valor,tipo,data,confianca:'media'});
 }
 
 function mostrarConfirmacao(txt,p){
@@ -457,13 +478,13 @@ function mostrarConfirmacao(txt,p){
     </div>`;
 }
 
-function confirmarVoz(desc,valor,tipo){
+function confirmarVoz(desc,valor,tipo,data){
   const pid=document.getElementById('voz-p').value;
   const p=D.periodos.find(x=>x.id===pid);
   if(!p)return;
   const vf=tipo==='receita'?valor:-valor;
   const hoje=new Date();
-  const df=String(hoje.getDate()).padStart(2,'0')+'/'+String(hoje.getMonth()+1).padStart(2,'0')+'/'+hoje.getFullYear();
+  const df=data||String(hoje.getDate()).padStart(2,'0')+'/'+String(hoje.getMonth()+1).padStart(2,'0')+'/'+hoje.getFullYear();
   p.lancamentos.push({id:'l'+Date.now(),desc,tipo,valor:vf,data:df});
   if(tipo==='receita')p.bruto+=valor;
   save(D);closeModal();R.inicio();

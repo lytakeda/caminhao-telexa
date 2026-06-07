@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<title>Irmaos Telexa · ACM-1751</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{
+  --bg0:#0f172a;--bg1:#1e293b;--bg2:#334155;--bg3:#475569;
+  --accent:#22d3ee;--accent2:#0891b2;--green:#4ade80;--red:#f87171;--yellow:#fbbf24;
+  --text1:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --radius:12px;--radius-sm:8px;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:var(--font);overflow:hidden}
+.app{display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;max-width:430px;margin:0 auto;background:var(--bg0)}
+
+/* PIN */
+.pin-screen{position:fixed;inset:0;background:var(--bg0);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;max-width:430px;margin:0 auto}
+.pin-logo{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin-bottom:20px}
+.pin-title{font-size:20px;font-weight:600;color:var(--text1);margin-bottom:6px}
+.pin-sub{font-size:12px;color:var(--text3);margin-bottom:36px;text-align:center}
+.pin-dots{display:flex;gap:16px;margin-bottom:36px}
+.pin-dot{width:15px;height:15px;border-radius:50%;border:2px solid var(--bg3);background:none;transition:all .15s}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent)}
+.pin-dot.error{background:var(--red);border-color:var(--red)}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:270px}
+.pin-key{height:68px;border-radius:var(--radius);border:1px solid var(--bg2);background:var(--bg1);color:var(--text1);font-size:24px;font-weight:500;cursor:pointer;font-family:var(--mono);display:flex;align-items:center;justify-content:center;transition:all .12s}
+.pin-key:active{background:var(--bg2);transform:scale(0.93)}
+.pin-key.empty{border:none;background:none;cursor:default}
+.pin-key.del{font-size:20px;color:var(--text2)}
+.pin-shake{animation:shake .35s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+/* TOPBAR */
+.topbar{padding:12px 14px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bg2);background:var(--bg0);flex-shrink:0}
+.truck-badge{width:36px;height:36px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;flex-shrink:0}
+.topbar-info{flex:1}
+.topbar-title{font-size:15px;font-weight:600;color:var(--text1)}
+.topbar-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.topbar-placa{font-family:var(--mono);font-size:11px;background:var(--bg2);color:var(--accent);padding:2px 8px;border-radius:4px;border:1px solid var(--bg3)}
+.btn-sair{background:none;border:none;color:var(--text3);cursor:pointer;padding:6px;font-size:20px;margin-left:4px;display:flex;align-items:center;transition:color .15s}
+.btn-sair:active{color:var(--red)}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px;padding-bottom:20px;-webkit-overflow-scrolling:touch;min-height:0}
+.content::-webkit-scrollbar{display:none}
+.screen{display:none}
+.screen.active{display:block;animation:fadeIn .18s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* NAV */
+.nav{display:flex;background:var(--bg1);border-top:1px solid var(--bg2);padding:6px 0;padding-bottom:max(8px,env(safe-area-inset-bottom));flex-shrink:0}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;cursor:pointer;padding:4px 2px;color:var(--text3);font-size:10px;font-family:var(--font);transition:color .15s}
+.nb.active{color:var(--accent)}
+.nb i{font-size:20px;line-height:1}
+
+/* CARDS */
+.card{background:var(--bg1);border-radius:var(--radius);border:1px solid var(--bg2);padding:13px;margin-bottom:10px}
+.card-hdr{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:5px}
+.card-hdr i{font-size:13px}
+
+/* METRICS */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.metric{background:var(--bg1);border:1px solid var(--bg2);border-radius:var(--radius-sm);padding:10px 12px}
+.mlabel{font-size:10px;color:var(--text3);margin-bottom:3px;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+.mval{font-size:17px;font-weight:600;color:var(--text1);font-family:var(--mono)}
+.mval.g{color:var(--green)}.mval.r{color:var(--red)}.mval.y{color:var(--yellow)}
+
+/* ROWS */
+.drow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bg2);font-size:12px}
+.drow:last-child{border:none}
+.dlabel{color:var(--text2);flex:1}
+.dval{font-weight:500;color:var(--text1);font-family:var(--mono)}
+.dval.pos{color:var(--green)}.dval.neg{color:var(--red)}
+
+/* BADGES */
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;font-family:var(--mono)}
+.b-rec{background:#052e16;color:var(--green);border:1px solid #166534}
+.b-dep{background:#2d0707;color:var(--red);border:1px solid #7f1d1d}
+.b-ext{background:#2d1f07;color:var(--yellow);border:1px solid #78350f}
+
+/* CHIPS */
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:5px 13px;border:1px solid var(--bg3);border-radius:20px;background:none;font-size:11px;cursor:pointer;color:var(--text2);white-space:nowrap;font-family:var(--font);transition:all .15s}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#0f172a;font-weight:600}
+
+/* PROGRESS */
+.prog-bg{background:var(--bg2);border-radius:20px;height:7px;overflow:hidden;margin-top:5px}
+.prog{height:7px;border-radius:20px;transition:width .5s ease}
+
+/* FORMS */
+.fgroup{margin-bottom:11px}
+.flabel{font-size:11px;color:var(--text3);margin-bottom:4px;display:block;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+input,select{width:100%;padding:10px 12px;border:1px solid var(--bg2);border-radius:var(--radius-sm);background:var(--bg1);color:var(--text1);font-size:13px;font-family:var(--font);outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:var(--accent)}
+input::placeholder{color:var(--text3)}
+select option{background:var(--bg1)}
+
+/* TIPO BTNS */
+.tipo-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.tbtn{padding:9px 4px;border:1px solid var(--bg2);border-radius:var(--radius-sm);background:var(--bg1);font-size:11px;cursor:pointer;color:var(--text3);text-align:center;font-family:var(--font);transition:all .15s}
+.tbtn.tr{background:#052e16;border-color:#166534;color:var(--green);font-weight:600}
+.tbtn.td{background:#2d0707;border-color:#7f1d1d;color:var(--red);font-weight:600}
+.tbtn.te{background:#2d1f07;border-color:#78350f;color:var(--yellow);font-weight:600}
+
+/* BTNS */
+.btn-p{width:100%;padding:12px;background:var(--accent);color:#0f172a;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font);transition:opacity .15s}
+.btn-p:active{opacity:.8}
+.btn-o{width:100%;padding:10px;background:none;color:var(--text1);border:1px solid var(--bg2);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;margin-bottom:8px;font-family:var(--font)}
+.btn-o:active{background:var(--bg2)}
+.btn-del{background:none;border:none;color:var(--red);font-size:13px;cursor:pointer;padding:4px;opacity:.7}
+.btn-edit{background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;padding:4px;opacity:.8}
+.btn-edit:active{opacity:1}
+
+
+/* VOICE */
+.btn-voice{width:100%;padding:13px;background:linear-gradient(135deg,#0891b2,#22d3ee);color:#0f172a;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font);margin-bottom:8px;transition:all .15s}
+.btn-voice:active{opacity:.85;transform:scale(0.98)}
+.btn-voice.rec{background:linear-gradient(135deg,#be123c,#f87171);animation:prec 1.2s infinite}
+@keyframes prec{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.4)}50%{box-shadow:0 0 0 10px rgba(248,113,113,0)}}
+.vwave{display:flex;align-items:center;justify-content:center;gap:4px;height:40px;margin:14px 0}
+.vbar{width:4px;border-radius:4px;background:var(--accent);animation:wave 1s ease-in-out infinite}
+.vbar:nth-child(1){animation-delay:0s;height:16px}
+.vbar:nth-child(2){animation-delay:.1s;height:28px}
+.vbar:nth-child(3){animation-delay:.2s;height:40px}
+.vbar:nth-child(4){animation-delay:.3s;height:28px}
+.vbar:nth-child(5){animation-delay:.4s;height:16px}
+@keyframes wave{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.6)}}
+.vresult{background:var(--bg2);border-radius:var(--radius-sm);padding:13px;margin:10px 0;border-left:3px solid var(--accent)}
+.vrlabel{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;font-weight:500}
+.vrtext{font-size:13px;color:var(--text1);line-height:1.5}
+.vp-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bg2);font-size:12px}
+.vp-row:last-child{border:none}
+.vp-label{color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+.vp-val{font-weight:600;color:var(--text1);font-family:var(--mono)}
+.vp-val.pos{color:var(--green)}.vp-val.neg{color:var(--red)}.vp-val.warn{color:var(--yellow)}
+.vactions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.btn-confirm{padding:12px;background:var(--green);color:#0f172a;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.btn-vcancel{padding:12px;background:var(--bg2);color:var(--text1);border:none;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:var(--font)}
+.thinking{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:12px;padding:12px 0}
+.tdots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);animation:td .8s infinite;margin:0 2px}
+.tdots span:nth-child(2){animation-delay:.15s}.tdots span:nth-child(3){animation-delay:.3s}
+@keyframes td{0%,80%,100%{transform:scale(0.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* LANCAMENTO */
+.litem{background:var(--bg1);border-radius:var(--radius-sm);border:1px solid var(--bg2);padding:10px 12px;margin-bottom:5px;display:flex;align-items:center;gap:9px}
+.linfo{flex:1;min-width:0}
+.ldesc{font-size:12px;font-weight:500;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lmeta{font-size:10px;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:5px}
+.lval{font-size:13px;font-weight:600;font-family:var(--mono);white-space:nowrap}
+
+/* QUINZENA */
+.qbtn{background:var(--bg1);border:1px solid var(--bg2);border-radius:var(--radius-sm);padding:10px 13px;margin-bottom:6px;width:100%;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.qperiodo{font-size:12px;font-weight:500;color:var(--text1)}
+.qinfo{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* SOCIOS */
+.socios-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.socio{border-radius:var(--radius-sm);padding:13px;text-align:center;background:linear-gradient(135deg,#052e16,#064e3b);border:1px solid #166534}
+.socio-nome{font-size:10px;color:#4ade80;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.socio-val{font-size:18px;font-weight:600;color:var(--green);font-family:var(--mono)}
+
+/* DASH */
+.dash-sec{margin-bottom:14px}
+.dash-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px}
+.bar-chart{display:flex;flex-direction:column;gap:9px}
+.brow{display:flex;align-items:center;gap:8px}
+.blabel{font-size:10px;color:var(--text2);width:72px;flex-shrink:0;text-align:right;font-family:var(--mono)}
+.btrack{flex:1;background:var(--bg2);border-radius:20px;height:22px;overflow:hidden}
+.bfill{height:100%;border-radius:20px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:10px;font-weight:600;color:#fff;font-family:var(--mono);min-width:28px;transition:width .6s ease}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.comp-item{background:var(--bg1);border:1px solid var(--bg2);border-radius:var(--radius-sm);padding:10px;text-align:center}
+.comp-per{font-size:9px;color:var(--text3);margin-bottom:3px;font-family:var(--mono)}
+.comp-val{font-size:14px;font-weight:600;font-family:var(--mono)}
+.comp-sub{font-size:9px;color:var(--text3);margin-top:2px}
+
+/* MISC */
+.section-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 6px 2px;font-weight:500}
+.tag{display:inline-block;font-size:10px;padding:2px 9px;border-radius:12px;background:rgba(34,211,238,.15);color:var(--accent);margin-bottom:8px;border:1px solid rgba(34,211,238,.3);font-family:var(--mono)}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--bg1);border-radius:16px 16px 0 0;padding:18px 16px;width:100%;max-width:430px;max-height:87vh;overflow-y:auto;border-top:1px solid var(--bg2)}
+.modal-hdr{font-size:14px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;color:var(--text1)}
+.mclose{background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px}
+</style>
+</head>
+<body>
+
+<!-- PIN -->
+<div class="pin-screen" id="pin-screen">
+  <div class="pin-logo"><i class="ti ti-truck"></i></div>
+  <div class="pin-title">Irmaos Telexa</div>
+  <div class="pin-sub">Digite o PIN para acessar</div>
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-grid">
+    <button class="pin-key" onclick="pinKey(1)">1</button>
+    <button class="pin-key" onclick="pinKey(2)">2</button>
+    <button class="pin-key" onclick="pinKey(3)">3</button>
+    <button class="pin-key" onclick="pinKey(4)">4</button>
+    <button class="pin-key" onclick="pinKey(5)">5</button>
+    <button class="pin-key" onclick="pinKey(6)">6</button>
+    <button class="pin-key" onclick="pinKey(7)">7</button>
+    <button class="pin-key" onclick="pinKey(8)">8</button>
+    <button class="pin-key" onclick="pinKey(9)">9</button>
+    <button class="pin-key empty"></button>
+    <button class="pin-key" onclick="pinKey(0)">0</button>
+    <button class="pin-key del" onclick="pinDel()"><i class="ti ti-backspace"></i></button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+  <div class="topbar">
+    <div class="truck-badge"><i class="ti ti-truck"></i></div>
+    <div class="topbar-info">
+      <div class="topbar-title">Irmaos Telexa</div>
+      <div class="topbar-sub">COOTRACAM · Rio Grande/RS</div>
+    </div>
+    <span class="topbar-placa">ACM-1751</span>
+    <button class="btn-sair" onclick="sair()" title="Sair"><i class="ti ti-logout"></i></button>
+  </div>
+
+  <div class="content">
+    <div id="s-inicio" class="screen active"></div>
+    <div id="s-lancar" class="screen"></div>
+    <div id="s-historico" class="screen"></div>
+    <div id="s-socios" class="screen"></div>
+    <div id="s-dash" class="screen"></div>
+  </div>
+
+  <nav class="nav">
+    <button class="nb active" onclick="go('inicio',this)"><i class="ti ti-home"></i>inicio</button>
+    <button class="nb" onclick="go('lancar',this)"><i class="ti ti-plus"></i>lancar</button>
+    <button class="nb" onclick="go('historico',this)"><i class="ti ti-list"></i>historico</button>
+    <button class="nb" onclick="go('socios',this)"><i class="ti ti-users"></i>socios</button>
+    <button class="nb" onclick="go('dash',this)"><i class="ti ti-chart-bar"></i>dash</button>
+  </nav>
+</div>
+
+<div class="overlay" id="ov" onclick="closeModal(event)">
+  <div class="modal" id="mc"></div>
+</div>
+
+<script>
+// ── PIN ──────────────────────────────────────────────
+const PIN_CORRETO = '1751';
+let pinDigitado = '';
+
+function pinKey(n){
+  if(pinDigitado.length >= 4) return;
+  pinDigitado += n;
+  atualizarDots();
+  if(pinDigitado.length === 4) setTimeout(verificarPin, 120);
+}
+function pinDel(){
+  pinDigitado = pinDigitado.slice(0,-1);
+  atualizarDots();
+}
+function atualizarDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    d.classList.toggle('filled', i<pinDigitado.length);
+    d.classList.remove('error');
+  }
+}
+function verificarPin(){
+  if(pinDigitado === PIN_CORRETO){
+    const ps=document.getElementById('pin-screen');
+    ps.style.transition='opacity .3s';
+    ps.style.opacity='0';
+    setTimeout(()=>ps.style.display='none',300);
+  } else {
+    for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('error');
+    document.getElementById('pin-dots').classList.add('pin-shake');
+    setTimeout(()=>{
+      pinDigitado='';
+      atualizarDots();
+      document.getElementById('pin-dots').classList.remove('pin-shake');
+    },500);
+  }
+}
+function sair(){
+  if(confirm('Deseja sair do app?')){
+    const ps=document.getElementById('pin-screen');
+    ps.style.display='flex';
+    ps.style.opacity='1';
+    pinDigitado='';
+    atualizarDots();
+  }
+}
+
+// ── DADOS ────────────────────────────────────────────
+const SK='telexa_v1';
+const SOCIOS=['Telexa 1','Telexa 2'];
+const INIT={periodos:[
+  {id:'p1',label:'16/03 a 31/03/2026',mes:'03/2026',bruto:13708.26,lancamentos:[
+    {id:'l1',desc:'Servicos COOTRACAM',tipo:'receita',valor:13708.26,data:'16/03/2026'},
+    {id:'l2',desc:'Credito quinzena anterior',tipo:'receita',valor:2000.00,data:'16/03/2026'},
+    {id:'l3',desc:'Pago saldo quinzena anterior',tipo:'despesa',valor:-4030.76,data:'16/03/2026'},
+    {id:'l4',desc:'Vale combustivel motorista (3x)',tipo:'despesa',valor:-2874.68,data:'16/03/2026'},
+    {id:'l5',desc:'Retencao INSS',tipo:'despesa',valor:-548.30,data:'16/03/2026'},
+    {id:'l6',desc:'Retencao SEST/SENAT',tipo:'despesa',valor:-68.53,data:'16/03/2026'},
+    {id:'l7',desc:'Rastreamento',tipo:'despesa',valor:-92.00,data:'16/03/2026'},
+  ]},
+  {id:'p2',label:'01/05 a 15/05/2026',mes:'05/2026',bruto:13727.32,lancamentos:[
+    {id:'l10',desc:'Servicos COOTRACAM',tipo:'receita',valor:13727.32,data:'01/05/2026'},
+    {id:'l11',desc:'Saldo ATLAS',tipo:'receita',valor:1456.24,data:'01/05/2026'},
+    {id:'l12',desc:'Vale combustivel motorista',tipo:'despesa',valor:-2293.10,data:'01/05/2026'},
+    {id:'l13',desc:'Vale combustivel externo',tipo:'despesa',valor:-1612.50,data:'01/05/2026'},
+    {id:'l14',desc:'Borracharia / pneus (4x)',tipo:'despesa',valor:-1678.17,data:'01/05/2026'},
+    {id:'l15',desc:'Baterias',tipo:'despesa',valor:-237.50,data:'01/05/2026'},
+    {id:'l16',desc:'Parte KIT 32/44',tipo:'despesa',valor:-600.00,data:'01/05/2026'},
+    {id:'l17',desc:'Retencao INSS',tipo:'despesa',valor:-549.05,data:'01/05/2026'},
+    {id:'l18',desc:'Retencao SEST/SENAT',tipo:'despesa',valor:-68.60,data:'01/05/2026'},
+    {id:'l19',desc:'Plano de saude (2x)',tipo:'despesa',valor:-316.24,data:'01/05/2026'},
+    {id:'l20',desc:'TAC Auxiliar + INSS ANTT',tipo:'despesa',valor:-354.20,data:'01/05/2026'},
+    {id:'l21',desc:'Mangueira de ar',tipo:'extra',valor:-130.00,data:'01/05/2026'},
+    {id:'l22',desc:'Oleo hidraulico (Miguel)',tipo:'extra',valor:-26.00,data:'01/05/2026'},
+    {id:'l23',desc:'Pago incognito',tipo:'extra',valor:-38.00,data:'01/05/2026'},
+    {id:'l24',desc:'Cilgram / Maicon Pires',tipo:'extra',valor:-100.00,data:'01/05/2026'},
+  ]}
+]};
+
+function load(){try{const r=localStorage.getItem(SK);return r?JSON.parse(r):JSON.parse(JSON.stringify(INIT));}catch(e){return JSON.parse(JSON.stringify(INIT));}}
+function save(d){try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){}}
+let D=load(), tipoSel='receita', fI='todos', fH='todos';
+function sal(p){return p.lancamentos.reduce((s,l)=>s+l.valor,0);}
+function fmt(v){return'R$\u00a0'+Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function meses(){const s=new Set();D.periodos.forEach(p=>s.add(p.mes||''));return[...s].filter(Boolean).sort();}
+function getPs(m){return m==='todos'?D.periodos:D.periodos.filter(p=>p.mes===m);}
+function mesNome(m){if(!m)return'';const[mm,yy]=m.split('/');const n=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];return n[parseInt(mm)]+'/'+(yy||'').slice(2);}
+function badgeH(t){if(t==='receita')return'<span class="badge b-rec">receita</span>';if(t==='despesa')return'<span class="badge b-dep">despesa</span>';return'<span class="badge b-ext">extra</span>';}
+function chips(atual,fn){return`<div class="chips"><button class="chip ${atual==='todos'?'on':''}" onclick="${fn}('todos')">Todos</button>${meses().map(m=>`<button class="chip ${atual===m?'on':''}" onclick="${fn}('${m}')">${mesNome(m)}</button>`).join('')}</div>`;}
+function setFI(m){fI=m;R.inicio();}
+function setFH(m){fH=m;R.historico();}
+
+function go(s,btn){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s-'+s).classList.add('active');
+  if(btn)btn.classList.add('active');
+  R[s]();
+}
+
+// ── VOICE ─────────────────────────────────────────────
+let vozPeriodoId='';
+
+function abrirVoz(pid){
+  vozPeriodoId=pid||D.periodos[D.periodos.length-1].id;
+  const opts=D.periodos.map(p=>`<option value="${p.id}"${p.id===vozPeriodoId?' selected':''}>${p.label}</option>`).join('');
+  document.getElementById('mc').innerHTML=`
+    <div class="modal-hdr">
+      <span><i class="ti ti-microphone" style="margin-right:6px;color:var(--accent)"></i>Lancamento por voz</span>
+      <button class="mclose" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fgroup"><label class="flabel">Quinzena</label><select id="voz-p">${opts}</select></div>
+    <div id="voz-body">
+      <div style="text-align:center;color:var(--text2);font-size:13px;padding:10px 0">Toque no botao e fale o lancamento</div>
+      <div style="text-align:center;color:var(--text3);font-size:11px;margin-bottom:16px">Ex: "Gastei 130 reais com mangueira" ou "Recebi 13 mil da cooperativa"</div>
+      <button class="btn-voice" id="voz-btn" onclick="iniciarVoz()"><i class="ti ti-microphone"></i>Toque para falar</button>
+    </div>`;
+  document.getElementById('ov').classList.add('open');
+}
+
+function iniciarVoz(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById('voz-body').innerHTML=`<div style="text-align:center;padding:20px;color:var(--red);font-size:13px"><i class="ti ti-alert-circle" style="font-size:32px;display:block;margin-bottom:8px"></i>Navegador nao suporta voz.<br><span style="font-size:11px;color:var(--text3)">Use o Chrome no Android.</span></div>`;
+    return;
+  }
+  const rec=new SR();
+  rec.lang='pt-BR';rec.continuous=false;rec.interimResults=false;
+  document.getElementById('voz-body').innerHTML=`
+    <div style="text-align:center;color:var(--text2);font-size:13px;padding:8px 0">Ouvindo...</div>
+    <div class="vwave"><div class="vbar"></div><div class="vbar"></div><div class="vbar"></div><div class="vbar"></div><div class="vbar"></div></div>
+    <div style="text-align:center;font-size:11px;color:var(--text3)">Fale claramente</div>`;
+  rec.onresult=e=>{
+    const txt=e.results[0][0].transcript;
+    mostrarTranscricao(txt);
+  };
+  rec.onerror=()=>{
+    document.getElementById('voz-body').innerHTML=`<div style="text-align:center;padding:16px;color:var(--red);font-size:12px">Nao foi possivel capturar. Tente novamente.</div><button class="btn-voice" onclick="iniciarVoz()"><i class="ti ti-microphone"></i>Tentar novamente</button>`;
+  };
+  rec.start();
+}
+
+function mostrarTranscricao(txt){
+  document.getElementById('voz-body').innerHTML=`
+    <div class="vresult"><div class="vrlabel">Voce disse</div><div class="vrtext">"${txt}"</div></div>
+    <div class="thinking"><i class="ti ti-brain"></i>Interpretando...<div class="tdots"><span></span><span></span><span></span></div></div>`;
+  interpretarComIA(txt);
+}
+
+async function interpretarComIA(txt){
+  const prompt=`Interprete este lancamento financeiro de uma empresa de transporte de caminhao e retorne SOMENTE um JSON valido, sem markdown, sem explicacao:
+{"descricao":"texto curto","valor":0.00,"tipo":"receita ou despesa ou extra","confianca":"alta ou media ou baixa"}
+
+Regras de tipo:
+- receita: recebeu dinheiro, pagamento cooperativa, saldo, credito
+- despesa: combustivel, pneu, borracha, manutencao, retencoes, impostos, kit, bateria, saude
+- extra: gastos pequenos do bolso, servicos avulsos nao listados no recibo
+
+Texto: "${txt}"`;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await resp.json();
+    const raw=data.content[0].text.replace(/```json|```/g,'').trim();
+    mostrarConfirmacao(txt,JSON.parse(raw));
+  }catch(e){
+    interpretarLocal(txt);
+  }
+}
+
+function interpretarLocal(txt){
+  const t=txt.toLowerCase();
+  let valor=0,tipo='despesa',desc=txt;
+  const nums=t.match(/\d+[.,]?\d*/g);
+  if(nums){for(const n of nums){const v=parseFloat(n.replace(',','.'));if(v>1){valor=v;break;}}}
+  if(t.includes('recebi')||t.includes('pagamento')||t.includes('cooperativa')||t.includes('saldo'))tipo='receita';
+  else if(t.includes('gastei')||t.includes('paguei')||t.includes('comprei'))tipo='extra';
+  mostrarConfirmacao(txt,{descricao:desc,valor,tipo,confianca:'media'});
+}
+
+function mostrarConfirmacao(txt,p){
+  const corC=p.confianca==='alta'?'var(--green)':p.confianca==='media'?'var(--yellow)':'var(--red)';
+  const tLabel=p.tipo==='receita'?'Receita':p.tipo==='despesa'?'Despesa':'Extra';
+  const tClass=p.tipo==='receita'?'pos':p.tipo==='despesa'?'neg':'warn';
+  document.getElementById('voz-body').innerHTML=`
+    <div class="vresult"><div class="vrlabel">Voce disse</div><div class="vrtext">"${txt}"</div></div>
+    <div style="margin:10px 0">
+      <div class="vp-row"><span class="vp-label">Descricao</span><span class="vp-val">${p.descricao}</span></div>
+      <div class="vp-row"><span class="vp-label">Valor</span><span class="vp-val ${tClass}">${fmt(p.valor)}</span></div>
+      <div class="vp-row"><span class="vp-label">Tipo</span><span class="vp-val ${tClass}">${tLabel}</span></div>
+      <div class="vp-row"><span class="vp-label">Confianca</span><span style="font-size:12px;color:${corC};font-weight:500">${p.confianca}</span></div>
+    </div>
+    <div class="vactions">
+      <button class="btn-vcancel" onclick="abrirVoz()"><i class="ti ti-refresh" style="margin-right:4px"></i>Gravar de novo</button>
+      <button class="btn-confirm" onclick="confirmarVoz('${p.descricao.replace(/'/g,"\\'")}',${p.valor},'${p.tipo}')"><i class="ti ti-check" style="margin-right:4px"></i>Confirmar</button>
+    </div>`;
+}
+
+function confirmarVoz(desc,valor,tipo){
+  const pid=document.getElementById('voz-p').value;
+  const p=D.periodos.find(x=>x.id===pid);
+  if(!p)return;
+  const vf=tipo==='receita'?valor:-valor;
+  const hoje=new Date();
+  const df=String(hoje.getDate()).padStart(2,'0')+'/'+String(hoje.getMonth()+1).padStart(2,'0')+'/'+hoje.getFullYear();
+  p.lancamentos.push({id:'l'+Date.now(),desc,tipo,valor:vf,data:df});
+  if(tipo==='receita')p.bruto+=valor;
+  save(D);closeModal();R.inicio();
+  alert('Lancamento salvo!');
+}
+
+// ── RENDERS ───────────────────────────────────────────
+const R={
+  inicio(){
+    const ps=getPs(fI);
+    const ult=ps.length?ps[ps.length-1]:D.periodos[D.periodos.length-1];
+    const rec=ult.lancamentos.filter(l=>l.valor>0).reduce((s,l)=>s+l.valor,0);
+    const dep=ult.lancamentos.filter(l=>l.valor<0).reduce((s,l)=>s+l.valor,0);
+    const s=sal(ult);
+    const pct=rec>0?Math.round(Math.abs(dep)/rec*100):0;
+    const bc=pct>80?'#f87171':pct>60?'#fbbf24':'#4ade80';
+    document.getElementById('s-inicio').innerHTML=`
+      ${chips(fI,'setFI')}
+      <div class="tag">${ult.label}</div>
+      <div class="mgrid">
+        <div class="metric"><div class="mlabel">Bruto</div><div class="mval">${fmt(rec)}</div></div>
+        <div class="metric"><div class="mlabel">Despesas</div><div class="mval r">${fmt(dep)}</div></div>
+        <div class="metric"><div class="mlabel">Saldo</div><div class="mval ${s>=0?'g':'r'}">${fmt(s)}</div></div>
+        <div class="metric"><div class="mlabel">Por socio</div><div class="mval g">${fmt(s/2)}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><i class="ti ti-activity"></i>Comprometimento</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:5px">${pct}% da receita em despesas</div>
+        <div class="prog-bg"><div class="prog" style="width:${Math.min(pct,100)}%;background:${bc}"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><i class="ti ti-clock"></i>Ultimos lancamentos</div>
+        ${ult.lancamentos.slice(-4).reverse().map(l=>`<div class="drow"><span class="dlabel">${l.desc}</span><span class="dval ${l.valor>=0?'pos':'neg'}">${l.valor>=0?'+':''}${fmt(l.valor)}</span></div>`).join('')}
+      </div>
+      <button class="btn-voice" onclick="abrirVoz()"><i class="ti ti-microphone"></i>Lancar por voz</button>
+      <button class="btn-p" onclick="go('lancar',document.querySelectorAll('.nb')[1])"><i class="ti ti-plus"></i>Lancar manualmente</button>`;
+  },
+
+  lancar(){
+    const opts=D.periodos.map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+    document.getElementById('s-lancar').innerHTML=`
+      <button class="btn-voice" onclick="abrirVoz()"><i class="ti ti-microphone"></i>Lancar por voz</button>
+      <div class="card">
+        <div class="card-hdr"><i class="ti ti-edit"></i>Lancamento manual</div>
+        <div class="fgroup"><label class="flabel">Tipo</label>
+          <div class="tipo-row">
+            <button class="tbtn tr" id="tb-r" onclick="sT('receita')">Receita</button>
+            <button class="tbtn" id="tb-d" onclick="sT('despesa')">Despesa</button>
+            <button class="tbtn" id="tb-e" onclick="sT('extra')">Extra</button>
+          </div>
+        </div>
+        <div class="fgroup"><label class="flabel">Quinzena</label><select id="f-p">${opts}<option value="nova">+ Nova quinzena...</option></select></div>
+        <div class="fgroup"><label class="flabel">Descricao</label><input type="text" id="f-d" placeholder="Ex: Pneu dianteiro"/></div>
+        <div class="fgroup"><label class="flabel">Valor (R$)</label><input type="number" id="f-v" placeholder="0,00" step="0.01" min="0"/></div>
+        <div class="fgroup"><label class="flabel">Data</label><input type="date" id="f-dt" value="${new Date().toISOString().split('T')[0]}"/></div>
+        <button class="btn-p" onclick="salvar()"><i class="ti ti-check"></i>Salvar</button>
+      </div>
+      <button class="btn-o" onclick="novaQ()"><i class="ti ti-calendar-plus" style="vertical-align:-2px;margin-right:5px"></i>Criar nova quinzena</button>`;
+    tipoSel='receita';
+  },
+
+  historico(){
+    const ps=getPs(fH).slice().reverse();
+    const lista=ps.length?ps.map(p=>{const s=sal(p);return`<button class="qbtn" onclick="abrirP('${p.id}')"><div><div class="qperiodo">${p.label}</div><div class="qinfo">${p.lancamentos.length} lancamentos · ${p.mes||''}</div></div><span style="font-size:13px;font-weight:600;font-family:var(--mono);color:${s>=0?'var(--green)':'var(--red)'}">${s>=0?'+':''}${fmt(s)}</span></button>`;}).join(''):'<div style="text-align:center;padding:28px;color:var(--text3);font-size:12px">Nenhum periodo neste mes</div>';
+    document.getElementById('s-historico').innerHTML=`${chips(fH,'setFH')}<div class="section-label">Quinzenas</div>${lista}`;
+  },
+
+  socios(){
+    const ult=D.periodos[D.periodos.length-1];
+    const s=sal(ult);
+    const tB=D.periodos.reduce((a,p)=>a+p.bruto,0);
+    const tS=D.periodos.reduce((a,p)=>a+sal(p),0);
+    document.getElementById('s-socios').innerHTML=`
+      <div class="tag">Ultima quinzena: ${ult.label}</div>
+      <div class="socios-row">
+        <div class="socio"><div class="socio-nome">${SOCIOS[0]}</div><div class="socio-val">${fmt(s/2)}</div></div>
+        <div class="socio"><div class="socio-nome">${SOCIOS[1]}</div><div class="socio-val">${fmt(s/2)}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><i class="ti ti-trending-up"></i>Acumulado geral</div>
+        <div class="drow"><span class="dlabel">Total bruto</span><span class="dval pos">${fmt(tB)}</span></div>
+        <div class="drow"><span class="dlabel">Saldo acumulado</span><span class="dval ${tS>=0?'pos':'neg'}">${fmt(tS)}</span></div>
+        <div class="drow"><span class="dlabel">Periodos</span><span class="dval">${D.periodos.length}</span></div>
+        <div class="drow"><span class="dlabel">Media por quinzena</span><span class="dval pos">${fmt(tS/D.periodos.length)}</span></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><i class="ti ti-cash"></i>Historico de divisao</div>
+        ${D.periodos.map(p=>{const s=sal(p);return`<div class="drow"><span class="dlabel" style="font-size:11px">${p.label}</span><span class="dval ${s>=0?'pos':'neg'}" style="font-size:11px">${fmt(s/2)} cada</span></div>`;}).join('')}
+      </div>`;
+  },
+
+  dash(){
+    const ms=meses();
+    const dm=ms.map(m=>{
+      const ps=getPs(m);
+      const rec=ps.reduce((s,p)=>s+p.lancamentos.filter(l=>l.valor>0).reduce((a,l)=>a+l.valor,0),0);
+      const dep=ps.reduce((s,p)=>s+p.lancamentos.filter(l=>l.valor<0).reduce((a,l)=>a+l.valor,0),0);
+      const s=rec+dep;
+      return{m,rec,dep:Math.abs(dep),sal:s,lucro:s/2,label:mesNome(m)};
+    });
+    const mxR=Math.max(...dm.map(d=>d.rec),1);
+    const barras=dm.map(d=>`<div class="brow"><span class="blabel">${d.label}</span><div style="flex:1;display:flex;flex-direction:column;gap:3px"><div class="btrack"><div class="bfill" style="width:${Math.round(d.rec/mxR*100)}%;background:#0891b2">${fmt(d.rec)}</div></div><div class="btrack"><div class="bfill" style="width:${Math.round(d.dep/mxR*100)}%;background:#be123c">${fmt(d.dep)}</div></div></div></div>`).join('');
+    const tR=D.periodos.reduce((s,p)=>s+p.lancamentos.filter(l=>l.valor>0).reduce((a,l)=>a+l.valor,0),0);
+    const tD=D.periodos.reduce((s,p)=>s+p.lancamentos.filter(l=>l.valor<0).reduce((a,l)=>a+l.valor,0),0);
+    const tS=tR+tD;const mg=tR>0?Math.round(tS/tR*100):0;
+    const cats={};
+    D.periodos.forEach(p=>p.lancamentos.filter(l=>l.valor<0).forEach(l=>{
+      const c=l.tipo==='extra'?'Extras':l.desc.toLowerCase().includes('combustiv')?'Combustivel':l.desc.toLowerCase().includes('pneu')||l.desc.toLowerCase().includes('borracha')?'Pneus':l.desc.toLowerCase().includes('inss')||l.desc.toLowerCase().includes('sest')||l.desc.toLowerCase().includes('senat')?'Retencoes':l.desc.toLowerCase().includes('saude')?'Saude':'Outros';
+      cats[c]=(cats[c]||0)+Math.abs(l.valor);
+    }));
+    const mxC=Math.max(...Object.values(cats),1);
+    const catBars=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="brow"><span class="blabel">${k}</span><div class="btrack" style="flex:1"><div class="bfill" style="width:${Math.round(v/mxC*100)}%;background:#7c3aed">${fmt(v)}</div></div></div>`).join('');
+    const comp=dm.map(d=>`<div class="comp-item"><div class="comp-per">${d.label}</div><div class="comp-val ${d.sal>=0?'g':'r'}">${fmt(d.sal)}</div><div class="comp-sub">${fmt(d.lucro)} cada</div></div>`).join('');
+    document.getElementById('s-dash').innerHTML=`
+      <div class="dash-sec"><div class="dash-title">Resumo consolidado</div>
+        <div class="mgrid">
+          <div class="metric"><div class="mlabel">Bruto total</div><div class="mval">${fmt(tR)}</div></div>
+          <div class="metric"><div class="mlabel">Despesas</div><div class="mval r">${fmt(tD)}</div></div>
+          <div class="metric"><div class="mlabel">Lucro total</div><div class="mval g">${fmt(tS)}</div></div>
+          <div class="metric"><div class="mlabel">Margem</div><div class="mval ${mg>=30?'g':'r'}">${mg}%</div></div>
+        </div>
+      </div>
+      <div class="dash-sec"><div class="dash-title">Receita vs Despesa</div>
+        <div style="display:flex;gap:12px;margin-bottom:7px;font-size:10px;color:var(--text3)">
+          <span><span style="display:inline-block;width:9px;height:9px;background:#0891b2;border-radius:2px;margin-right:4px"></span>Receita</span>
+          <span><span style="display:inline-block;width:9px;height:9px;background:#be123c;border-radius:2px;margin-right:4px"></span>Despesa</span>
+        </div>
+        <div class="bar-chart">${barras}</div>
+      </div>
+      <div class="dash-sec"><div class="dash-title">Comparativo por quinzena</div><div class="comp-grid">${comp}</div></div>
+      <div class="dash-sec"><div class="dash-title">Onde vai o dinheiro</div><div class="bar-chart">${catBars}</div></div>`;
+  }
+};
+
+function sT(t){
+  tipoSel=t;
+  const map={receita:'r',despesa:'d',extra:'e'};
+  ['r','d','e'].forEach(x=>{const b=document.getElementById('tb-'+x);if(b)b.className='tbtn';});
+  const b=document.getElementById('tb-'+map[t]);
+  if(b)b.className='tbtn t'+map[t];
+}
+
+function salvar(){
+  const desc=document.getElementById('f-d').value.trim();
+  const vr=parseFloat(document.getElementById('f-v').value);
+  const di=document.getElementById('f-dt').value;
+  const pid=document.getElementById('f-p').value;
+  if(!desc||isNaN(vr)||vr<=0){alert('Preencha descricao e valor.');return;}
+  if(pid==='nova'){novaQ();return;}
+  const valor=tipoSel==='receita'?vr:-vr;
+  const p=D.periodos.find(x=>x.id===pid);
+  if(!p)return;
+  const pts=di.split('-');
+  const df=pts.length===3?`${pts[2]}/${pts[1]}/${pts[0]}`:di;
+  p.lancamentos.push({id:'l'+Date.now(),desc,tipo:tipoSel,valor,data:df});
+  if(tipoSel==='receita')p.bruto+=vr;
+  save(D);
+  document.getElementById('f-d').value='';
+  document.getElementById('f-v').value='';
+  alert('Salvo!');R.inicio();
+}
+
+function abrirP(id){
+  const p=D.periodos.find(x=>x.id===id);
+  if(!p)return;
+  const s=sal(p);
+  document.getElementById('mc').innerHTML=`
+    <div class="modal-hdr">${p.label}<button class="mclose" onclick="closeModal()"><i class="ti ti-x"></i></button></div>
+    <div class="mgrid" style="margin-bottom:10px">
+      <div class="metric"><div class="mlabel">Saldo</div><div class="mval ${s>=0?'g':'r'}">${fmt(s)}</div></div>
+      <div class="metric"><div class="mlabel">Por socio</div><div class="mval g">${fmt(s/2)}</div></div>
+    </div>
+    ${p.lancamentos.map(l=>`<div class="litem"><div class="linfo"><div class="ldesc">${l.desc}</div><div class="lmeta">${l.data} ${badgeH(l.tipo)}</div></div><div style="display:flex;align-items:center;gap:4px"><span class="lval ${l.valor>=0?'pos':'neg'}">${l.valor>=0?'+':''}${fmt(l.valor)}</span><button class="btn-edit" onclick="editarL('${p.id}','${l.id}')" title="Editar"><i class="ti ti-pencil"></i></button><button class="btn-del" onclick="delL('${p.id}','${l.id}')" title="Apagar"><i class="ti ti-trash"></i></button></div></div>`).join('')}`;
+  document.getElementById('ov').classList.add('open');
+}
+
+
+function editarL(pid, lid){
+  const p = D.periodos.find(x=>x.id===pid);
+  if(!p) return;
+  const l = p.lancamentos.find(x=>x.id===lid);
+  if(!l) return;
+
+  const opts = D.periodos.map(p2=>`<option value="${p2.id}"${p2.id===pid?' selected':''}>${p2.label}</option>`).join('');
+  const tipoOpts = ['receita','despesa','extra'].map(t=>`<option value="${t}"${t===l.tipo?' selected':''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('');
+  const valAbs = Math.abs(l.valor);
+
+  document.getElementById('mc').innerHTML=`
+    <div class="modal-hdr">
+      <span><i class="ti ti-pencil" style="margin-right:6px;color:var(--accent)"></i>Editar lancamento</span>
+      <button class="mclose" onclick="abrirP('${pid}')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fgroup"><label class="flabel">Quinzena</label><select id="e-p">${opts}</select></div>
+    <div class="fgroup"><label class="flabel">Tipo</label><select id="e-tipo">${tipoOpts}</select></div>
+    <div class="fgroup"><label class="flabel">Descricao</label><input type="text" id="e-desc" value="${l.desc}"/></div>
+    <div class="fgroup"><label class="flabel">Valor (R$)</label><input type="number" id="e-val" value="${valAbs}" step="0.01" min="0"/></div>
+    <div class="fgroup"><label class="flabel">Data</label><input type="text" id="e-data" value="${l.data}" placeholder="DD/MM/AAAA"/></div>
+    <div class="vactions" style="margin-top:14px">
+      <button class="btn-vcancel" onclick="abrirP('${pid}')">Cancelar</button>
+      <button class="btn-confirm" onclick="salvarEdicao('${pid}','${lid}')"><i class="ti ti-check" style="margin-right:4px"></i>Salvar</button>
+    </div>`;
+}
+
+function salvarEdicao(pid, lid){
+  const p = D.periodos.find(x=>x.id===pid);
+  if(!p) return;
+  const idx = p.lancamentos.findIndex(x=>x.id===lid);
+  if(idx<0) return;
+
+  const desc = document.getElementById('e-desc').value.trim();
+  const tipo = document.getElementById('e-tipo').value;
+  const vr = parseFloat(document.getElementById('e-val').value);
+  const data = document.getElementById('e-data').value.trim();
+
+  if(!desc || isNaN(vr) || vr<=0){ alert('Preencha todos os campos corretamente.'); return; }
+
+  const valor = tipo==='receita' ? vr : -vr;
+  p.lancamentos[idx] = { ...p.lancamentos[idx], desc, tipo, valor, data };
+  save(D);
+  abrirP(pid);
+}
+
+function delL(pid,lid){
+  if(!confirm('Remover?'))return;
+  const p=D.periodos.find(x=>x.id===pid);
+  if(p){p.lancamentos=p.lancamentos.filter(l=>l.id!==lid);save(D);}
+  closeModal();R.historico();
+}
+
+function novaQ(){
+  document.getElementById('mc').innerHTML=`
+    <div class="modal-hdr">Nova quinzena<button class="mclose" onclick="closeModal()"><i class="ti ti-x"></i></button></div>
+    <div class="fgroup"><label class="flabel">Periodo</label><input type="text" id="nq-l" placeholder="16/05 a 31/05/2026"/></div>
+    <div class="fgroup"><label class="flabel">Mes/Ano</label><input type="text" id="nq-m" placeholder="05/2026"/></div>
+    <div class="fgroup"><label class="flabel">Bruto do recibo (R$)</label><input type="number" id="nq-b" placeholder="0,00" step="0.01" min="0"/></div>
+    <button class="btn-p" onclick="criarQ()"><i class="ti ti-check"></i>Criar</button>`;
+  document.getElementById('ov').classList.add('open');
+}
+
+function criarQ(){
+  const label=document.getElementById('nq-l').value.trim();
+  const mes=document.getElementById('nq-m').value.trim();
+  const bruto=parseFloat(document.getElementById('nq-b').value);
+  if(!label||!mes||isNaN(bruto)){alert('Preencha todos os campos.');return;}
+  D.periodos.push({id:'p'+Date.now(),label,mes,bruto,lancamentos:[{id:'l'+Date.now(),desc:'Servicos COOTRACAM',tipo:'receita',valor:bruto,data:label.split(' ')[0]}]});
+  save(D);closeModal();R.inicio();alert('Quinzena criada!');
+}
+
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('ov'))return;
+  document.getElementById('ov').classList.remove('open');
+}
+
+R.inicio();
+</script>
+</body>
+</html>
